@@ -26,7 +26,7 @@ class MyTopo (Topo):
 		right_host_s1 = self.addHost('h3')
 		left_host_s2 = self.addHost('h2')
 		right_host_s2 = self.addHost('h4')
-		router_host = self.addHost('r1')
+		router_host = self.addSwitch('r1')
 		s1 = self.addSwitch('s1')
 		s2 = self.addSwitch('s2')
 
