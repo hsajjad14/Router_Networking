@@ -1,6 +1,7 @@
 # import socket programming library
 import socket
 import argparse
+import netifaces as ni
 
 # import thread module
 from _thread import *
@@ -11,28 +12,28 @@ print_lock = threading.Lock()
 # thread function
 def threaded(c):
     while True:
- 
+
         # data received from client
         data = c.recv(1024)
         if not data:
             print('Bye')
-             
+
             # lock released on exit
             print_lock.release()
             break
- 
+
         # reverse the given string from client
         #data = data[::-1]
- 
+
         # send back reversed string to client
         #c.send(data)
 
         # print data from the client
         print(data)
- 
+
     # connection closed
     c.close()
- 
+
 
 def sendMsg(input_port, input_ip_dest, ttl, input_file):
     host = input_ip_dest
@@ -62,9 +63,25 @@ def sendMsg(input_port, input_ip_dest, ttl, input_file):
 def broadcast(input_port):
     host = "255.255.255.255"
     port = int(input_port)
+    msg = b'broadcasting existence of host'
 
-    s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    # get the IP address(es) that this host uses to broadcast
+    # source: https://www.semicolonworld.com/question/53556/how-can-i-get-the-ip-address-of-eth0-in-python
+    interfaces = ni.interfaces()
+    ipsToBroadcast = []
+    for i in interfaces:
+        if i != 'lo':
+            ipsToBroadcast.append(ni.ifaddresses(i)[ni.AF_INET][-1]['broadcast'])
 
+    for ip in ipsToBroadcast:
+    	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    	s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    	s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    	s.bind((ip,port))
+    	s.sendto(msg, (host, port))
+    	s.close()
+
+    '''
     # connect to server on local computer
     try:
         s.connect((host,port))
@@ -77,15 +94,17 @@ def broadcast(input_port):
     s.send(message.encode('ascii'))
 
     s.close()
+    '''
 
 
-def Main(input_port, input_ip_dest, ttl, input_file):
+def Main(input_port, snd_msg_1st, input_ip_dest, ttl, input_file):
     broadcast(input_port)
 
-    sendMsg(input_port, input_ip_dest, ttl, input_file)
+    if snd_msg_1st.lower() == "true":
+        sendMsg(input_port, input_ip_dest, ttl, input_file)
 
     host = ""
- 
+
     # reverse a port on your computer
     # in our case it is 12345 but it
     # can be anything
@@ -93,7 +112,7 @@ def Main(input_port, input_ip_dest, ttl, input_file):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((host, port))
     print("socket binded to port", port)
- 
+
     # put the socket into listening mode
     s.listen(5)
     print("socket is listening")
@@ -119,12 +138,13 @@ def Main(input_port, input_ip_dest, ttl, input_file):
  
  
 if __name__ == '__main__':
-    argparser = argparse.ArgumentParser(description='take in port number, destination ip and ttl')
+    argparser = argparse.ArgumentParser(description='take in port number, a boolean flag for whether the server should send a message before listening, destination ip, ttl, and a path to the file to send')
     argparser.add_argument('port', help="port number")
+    argparser.add_argument('snd_msg_1st', help="boolean flag; true iff you want server to send a message before listening")
     argparser.add_argument('ip_dest', help="destination ip address")
     argparser.add_argument('ttl', help="time to live")
     argparser.add_argument('file', help="path of file to send")
     args = argparser.parse_args()
 
-    Main(args.port, args.ip_dest, args.ttl, args.file)
+    Main(args.port, args.snd_msg_1st, args.ip_dest, args.ttl, args.file)
 
