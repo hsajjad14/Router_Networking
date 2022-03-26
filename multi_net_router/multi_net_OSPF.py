@@ -354,8 +354,12 @@ def run():
         print("+++++++ROUTING TABLES BEFORE OSPF+++++++")
         time.sleep(10)
         while(True):
+            start = time.time()
             runOSPF(net)
-            time.sleep(1800) # run every 30 mins
+            end = time.time()
+            full_time = end - start
+            print("OSPF TIME TAKEN = ", full_time)
+            time.sleep(1800)
 
     CLI(net)
 
