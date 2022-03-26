@@ -107,7 +107,7 @@ def bellmanFord(graph, all_routers, src):
                     distances[r_neighbour], predecessors[r_neighbour] = distances[r] + 1, r
 
     # detect any negative cycles
-    # TODO: this may not be needed since all weights on the graph will be 1 (non-negative)
+    # note: in practice for this example, not be needed since all weights on the graph will be 1 (non-negative)
     for r in graph:
         for r_neighbour in graph[r]:
             assert distances[r_neighbour] <= distances[r] + 1, "Error: negative weight cycle"
@@ -138,14 +138,6 @@ def runBellmanFord(map_of_routers_and_links, all_routers):
         path_set = bellmanFord(map_of_routers_and_links, all_routers, r)
         for src_dst_tup in path_set:
             router_paths[src_dst_tup] = path_set[src_dst_tup]
-
-    # for r1 in all_routers:
-    #     for r2 in all_routers:
-    #         if r1 != r2:
-    #             if (r1, r2) not in cached_router_paths and (r1, r2) not in cached_router_paths:
-    #                 cached_router_paths[(r1, r2)] = bellmanFord(map_of_routers_and_links, all_routers, r1)
-    #                 cached_router_paths[(r2, r1)] = list(reversed(cached_router_paths[(r1, r2)]))
-
     return router_paths
 
 def runRIP(net):
@@ -248,6 +240,11 @@ def runRIP(net):
             print("command to send!!! : ", command)
             net[r_s].cmd(command)
 
+    print("=======ROUTING TABLES=======")
+    for r in all_routers:
+        net[r].cmdPrint("route")
+    print("=======ROUTING TABLES=======")
+
 def get_hosts_under_switches(net, all_hosts):
     hosts_under_switches = {}
     hosts_ips = {}
@@ -339,6 +336,13 @@ def run():
 
     pid = os.fork()
 
+    print("+++++++ROUTING TABLES BEFORE RIP+++++++")
+        net['r1'].cmdPrint("route")
+        net['r2'].cmdPrint("route")
+        net['r3'].cmdPrint("route")
+        net['r4'].cmdPrint("route")
+    print("+++++++ROUTING TABLES BEFORE RIP+++++++")
+    time.sleep(10)
     if pid == 0:
         while(True):
             runRIP(net)

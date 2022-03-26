@@ -355,7 +355,7 @@ def run():
         time.sleep(10)
         while(True):
             runOSPF(net)
-            time.sleep(10)
+            time.sleep(1800) # run every 30 mins
 
     CLI(net)
 
