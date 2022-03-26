@@ -337,10 +337,10 @@ def run():
     pid = os.fork()
 
     print("+++++++ROUTING TABLES BEFORE RIP+++++++")
-        net['r1'].cmdPrint("route")
-        net['r2'].cmdPrint("route")
-        net['r3'].cmdPrint("route")
-        net['r4'].cmdPrint("route")
+    net['r1'].cmdPrint("route")
+    net['r2'].cmdPrint("route")
+    net['r3'].cmdPrint("route")
+    net['r4'].cmdPrint("route")
     print("+++++++ROUTING TABLES BEFORE RIP+++++++")
     time.sleep(10)
     if pid == 0:
