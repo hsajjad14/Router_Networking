@@ -196,6 +196,9 @@ def runRIP(net):
     print("hosts under routers: ", hosts_under_routers)
 
     for k,v in cached_router_paths.items():
+        if len(v) < 2:
+            # this would be something like: (r, r): []
+            continue
         r_s = k[0]
         r_d = k[1]
         r_after_s = v[1]
