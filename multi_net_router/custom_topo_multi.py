@@ -71,7 +71,12 @@ class MyTopo (Topo):
             self.addLink(r2, s3)
             
             # connecting the two routers r1 and r2
-            self.addLink(r1, r2)
+            self.addLink(r1, 
+                         r2,
+                         intfName1='r1-eth2',
+                         intfName2='r2-eth2',
+                         params1={'ip': '10.0.6.1/24'},
+                         params2={'ip': '10.0.6.2/24'})
 
 
 
