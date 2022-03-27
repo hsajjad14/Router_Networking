@@ -6,6 +6,7 @@ import netifaces as ni
 # import thread module
 from _thread import *
 import threading
+from mininet.topo import Topo
  
 print_lock = threading.Lock()
  
@@ -42,6 +43,7 @@ def sendMsg(input_port, input_ip_dest, ttl, input_file):
     port = int(input_port)
 
     s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    s.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, int(ttl))
 
     # connect to server on local computer
     try:
@@ -60,10 +62,11 @@ def sendMsg(input_port, input_ip_dest, ttl, input_file):
 
     return 1
 
+
 def broadcast(input_port):
     host = "255.255.255.255"
     port = int(input_port)
-    msg = b'broadcasting existence of host'
+    msg = b'broadcasting existence of host\n'
 
     # get the IP address(es) that this host uses to broadcast
     # source: https://www.semicolonworld.com/question/53556/how-can-i-get-the-ip-address-of-eth0-in-python
@@ -74,12 +77,13 @@ def broadcast(input_port):
             ipsToBroadcast.append(ni.ifaddresses(i)[ni.AF_INET][-1]['broadcast'])
 
     for ip in ipsToBroadcast:
-    	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-    	s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    	s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-    	s.bind((ip,port))
-    	s.sendto(msg, (host, port))
-    	s.close()
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        s.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 0)
+        s.bind((ip,port))
+        s.sendto(msg, (host, port))
+        s.close()
 
     '''
     # connect to server on local computer
@@ -97,8 +101,9 @@ def broadcast(input_port):
     '''
 
 
-def Main(input_port, snd_msg_1st, input_ip_dest, ttl, input_file):
-    broadcast(input_port)
+def Main(input_port, initialize, snd_msg_1st, input_ip_dest, ttl, input_file):
+    if initialize.lower() == "true":
+        broadcast(input_port)
 
     if snd_msg_1st.lower() == "true":
         sendMsg(input_port, input_ip_dest, ttl, input_file)
@@ -138,13 +143,14 @@ def Main(input_port, snd_msg_1st, input_ip_dest, ttl, input_file):
  
  
 if __name__ == '__main__':
-    argparser = argparse.ArgumentParser(description='take in port number, a boolean flag for whether the server should send a message before listening, destination ip, ttl, and a path to the file to send')
+    argparser = argparse.ArgumentParser(description='take in port number, a boolean flag for initialize, a boolean flag for whether the server should send a message before listening, destination ip, ttl, and a path to the file to send')
     argparser.add_argument('port', help="port number")
+    argparser.add_argument('initialize', help="boolean flag; true iff you want to initialize this server and broadcast its existence")
     argparser.add_argument('snd_msg_1st', help="boolean flag; true iff you want server to send a message before listening")
     argparser.add_argument('ip_dest', help="destination ip address")
     argparser.add_argument('ttl', help="time to live")
     argparser.add_argument('file', help="path of file to send")
     args = argparser.parse_args()
 
-    Main(args.port, args.snd_msg_1st, args.ip_dest, args.ttl, args.file)
+    Main(args.port, args.initialize, args.snd_msg_1st, args.ip_dest, args.ttl, args.file)
 

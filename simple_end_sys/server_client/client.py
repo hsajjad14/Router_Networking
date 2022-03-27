@@ -10,6 +10,8 @@ def Main(input_port, input_ip_dest, ttl, input_file):
     port = int(input_port)
  
     s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    s.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, int(ttl))
  
     # connect to server on local computer
     s.connect((host,port))
