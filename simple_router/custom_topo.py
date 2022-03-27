@@ -27,22 +27,36 @@ class MyTopo (Topo):
 	def build(self):
             r1_eth1 = '10.0.1.1/24'
             r1_eth2 = '10.0.2.1/24'
+            r1_eth3 = '10.0.3.1/24'
 
 	    # add hosts and switches
             left_host_s1 = self.addHost('h1', ip='10.0.1.10/24', defaultRoute='via 10.0.1.1')
             right_host_s1 = self.addHost('h3', ip='10.0.1.20/24', defaultRoute='via 10.0.1.1')
             left_host_s2 = self.addHost('h2', ip='10.0.2.10/24', defaultRoute='via 10.0.2.1')
             right_host_s2 = self.addHost('h4', ip='10.0.2.20/24', defaultRoute='via 10.0.2.1')
-            router = self.addSwitch('r1')
+            left_host_s3 = self.addHost('h5', ip='10.0.3.10/24', defaultRoute='via 10.0.3.1')
+            right_host_s3 = self.addHost('h6', ip='10.0.3.20/24', defaultRoute='via 10.0.3.1')
+            router = self.addHost('r1')
             s1 = self.addSwitch('s1')
             s2 = self.addSwitch('s2')
+            s3 = self.addSwitch('s3')
 
 	    # add links
             self.addLink(left_host_s1, s1)
             self.addLink(right_host_s1, s1)
             self.addLink(right_host_s2, s2)
             self.addLink(left_host_s2, s2)
+            self.addLink(right_host_s3, s3)
+            self.addLink(left_host_s3, s3)
             self.addLink(s1, router, intfName2='r1-eth1', params2={ 'ip' : r1_eth1 } )
             self.addLink(s2, router, intfName2='r1-eth2', params2={ 'ip' : r1_eth2 } )
+            self.addLink(s3, router, intfName2='r1-eth3', params2={ 'ip' : r1_eth3 } )
+
+            '''
+            def addEndSysHost(self, ip_addr):
+            new_host = self.addHost('h'+str(self.num_hosts), ip=(ip_addr+'/24'), defaultRoute=('via '+ ip_addr))
+            self.addLink(new_host, )
+            self.count += 1
+            '''
 
 topos = { 'mytopo': ( lambda: MyTopo() ) }
