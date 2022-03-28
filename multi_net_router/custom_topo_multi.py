@@ -80,8 +80,11 @@ class MyTopo (Topo):
 
             r3 = self.addHost('r3')
             h7 = self.addHost('h7', ip='10.3.0.10/24', defaultRoute='via 10.3.0.1', mac="00:00:00:00:00:07")
-            
-            self.addLink(h7, r3)
+            s4 = self.addSwitch('s4')
+
+            self.addLink(h7, s4)
+            self.addLink(r3, s4)
+
             # connecting the two routers r1 and r3
             self.addLink(r1, r3, intfName1='r1-eth3', intfName2='r3-eth2', params1={'ip': '10.0.3.1/24'}, params2={'ip': '10.0.3.2/24'})
             # connecting the two routers r2 and r3
@@ -93,8 +96,11 @@ class MyTopo (Topo):
 
             r4 = self.addHost('r4')
             h8 = self.addHost('h8', ip='10.4.0.10/24', defaultRoute='via 10.4.0.1', mac="00:00:00:00:00:08")
-            
-            self.addLink(h8, r4)
+            s5 = self.addSwitch('s5')
+
+            self.addLink(h8, s5)
+            self.addLink(r4, s5)
+
             # connecting the two routers r3 and r4
             self.addLink(r3, r4, intfName1='r3-eth3', intfName2='r4-eth1', params1={'ip': '10.0.5.1/24'}, params2={'ip': '10.0.5.2/24'})
 
