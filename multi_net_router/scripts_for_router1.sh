@@ -15,5 +15,6 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 # adding route's with other hosts destination
 ip route add 10.2.0.0/24 via 10.0.6.2 dev r1-eth2
 ip route add 10.3.0.0/24 via 10.0.6.2 dev r1-eth2
+ip route add 10.4.0.0/24 via 10.0.6.2 dev r1-eth2
 
 

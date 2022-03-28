@@ -1,8 +1,6 @@
 #!/bin/bash
 
-
 echo "Setting up Router"
-
 ifconfig r4-eth0 0
 ifconfig r4-eth1 0
 
