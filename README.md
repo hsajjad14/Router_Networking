@@ -21,3 +21,7 @@ To test the simple end-system which is running on host2:
 7. On h1 use netcat to send a message to h4 nc 10.0.2.20 5678 < test_snd 
 8. (test_snd is a file with text in it)
 9. Verify the message was sent
+
+
+## Multi Net Router
+1. Run `sudo python multi_net_OSPF.py`
