@@ -86,6 +86,40 @@ class NetworkTopo(Topo):
         self.addLink(r3, r4, intfName1='r3-eth3', intfName2='r4-eth1', params1={'ip': '10.0.5.1/24'}, params2={'ip': '10.0.5.2/24'})
 
 
+def runOSPF(net):
+    all_hosts = net.keys()
+    print("ALL HOSTS: ", all_hosts)
+
+    all_routers = []
+
+    for h in all_hosts:
+        if h[0] == 'r':
+            all_routers.append(h)
+
+    print("ALL ROUTERS: ", all_routers)
+    map_of_routers_and_links = {}
+
+    for r1 in all_routers:
+        for r2 in all_routers:
+            if r1 != r2:
+                r1_node = net.getNodeByName(r1)
+                r2_node = net.getNodeByName(r2)
+                links_between = net.linksBetween(r1_node,r2_node)
+                #print(r1, r2)
+                # ASSUMING A SINGLE LINK BETWEEN EACH ROUTER!!!
+                link_exists = links_between != []  
+                if link_exists and r1 not in map_of_routers_and_links:
+                    map_of_routers_and_links[r1] = [r2]
+                elif link_exists and r1 in map_of_routers_and_links and r2 not in map_of_routers_and_links[r1]:
+                    map_of_routers_and_links[r1].append(r2)
+
+                if link_exists and r2 not in map_of_routers_and_links:
+                    map_of_routers_and_links[r2] = [r1]
+                elif link_exists and r2 in map_of_routers_and_links and r1 not in map_of_routers_and_links[r2]:
+                    map_of_routers_and_links[r2].append(r1)
+                    
+    print("map of routers and links: ", map_of_routers_and_links)
+
 def run():
     topo = NetworkTopo()
     net = Mininet(topo=topo)
@@ -101,6 +135,9 @@ def run():
 
     net.start()
     print("==========NETWORK START==========")
+    
+    runOSPF(net)
+
     CLI(net)
     print("==========CLI - NET START==========")
     net.stop()
