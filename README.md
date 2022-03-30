@@ -2,7 +2,7 @@
 
 ## Simple End System
 To test the simple end-system which is running on host2:
-1. First run `nc -l <port>` on host1
+1. First run `nc -lu <port>` on host1 (broadcast implemented using UDP)
 2. On host2 run `python simple_end_sys/server_client/server.py <port> True True <host1's ip> <ttl> <file_path_to_send>` This:
     * Sets the flag for broadcasting host2 to the router
     * Sets the flag to send a message
