@@ -126,84 +126,21 @@ def runOSPF(net):
     # for each router get shortest path to every other router
     # get the first router in that shortest path
 
-    cached_router_paths = {}
-    #path = BFS_SP(map_of_routers_and_links, "r1","r2")
-    #print("asdfasdf --- ",path)
-
-    for r1 in all_routers:
-        for r2 in all_routers:
-            if r1 != r2:
-                if (r1, r2) not in cached_router_paths and (r1, r2) not in cached_router_paths:
-                    cached_router_paths[(r1, r2)] = BFS_SP(map_of_routers_and_links, r1, r2)
-                    cached_router_paths[(r2, r1)] = list(reversed(cached_router_paths[(r1, r2)]))
+    cached_router_paths = runBFS(all_routers, map_of_routers_and_links)
 
     print(cached_router_paths)
 
     # set routing tables
-    for router in all_routers:
-        router_node = net.getNodeByName(router)
-        interfaces = router_node.intfNames()
-        print("router " + router + ": interface: " + str(interfaces))
-        for interface in interfaces:
-            print("AAAAAAAAAAA",interface)
-            if router_node.MAC(interface):
-                print("\tMAC:", router_node.MAC(interface))
-            if router_node.IP(interface):
-                print("\t IP:", router_node.IP(interface))
-            #print("\t ip of "+interface+" = " + router_node.IP(interface))
-        #print("\t of " + interfaces[0] + ":: ip =" + router_node.IP(interfaces[0]))
 
-    switches_under_router = {}
-    for h in all_hosts:
-        for r in all_routers:
-            if r not in switches_under_router:
-                switches_under_router[r] = []
-
-            if h[0] == 's':
-                # it is a switch
-                # check if it links to the router
-                # if it does add it to the map
-                s = h
-                router_node = net.getNodeByName(r)
-                switch_node = net.getNodeByName(s)
-                links_between = net.linksBetween(router_node, switch_node)
-                if links_between != []:
-                    switches_under_router[r].append(s)
+    switches_under_router = get_switches_under_routers(net, all_hosts, all_routers)
 
     print("switches under router: ", switches_under_router)
-    
-    hosts_under_switches = {}
-    hosts_ips = {}
-    for h in all_hosts:
-        for s in all_hosts:
-            if s[0] == 's' and s not in hosts_under_switches:
-                hosts_under_switches[s] = []
 
-            if s[0] == 's' and h[0] == 'h':
-                # it is a switch
-                # check if it links to the router
-                # if it does add it to the map
-                host_node = net.getNodeByName(h)
-                switch_node = net.getNodeByName(s)
-                links_between = net.linksBetween(host_node, switch_node)
-                if links_between != []:
-                    hosts_under_switches[s].append(h)
-                    host_interfaces = host_node.intfNames()
-                    print("host_interfaces: ", h, host_interfaces)
-
-                    for i in host_interfaces:
-                        if host_node.IP(i) and h not in hosts_ips:
-                            hosts_ips[h] = host_node.IP(i)
-                            print("\t\tip:", host_node.IP(i))
-
+    hosts_under_switches, hosts_ips = get_hosts_under_switches(net, all_hosts)
 
     print("hosts under switches: ", hosts_under_switches)
     
-    hosts_under_routers = {}
-    for k,v in switches_under_router.items():
-        hosts_under_routers[k] = []
-        for s in v:
-            hosts_under_routers[k] += hosts_under_switches[s]
+    hosts_under_routers = get_hosts_under_routers(switches_under_router, hosts_under_switches)
 
     print("hosts under routers: ", hosts_under_routers)
 
@@ -236,7 +173,7 @@ def runOSPF(net):
         subnet_hosts = []
         for host in hosts_under_destination:
             list_host_ip = hosts_ips[host].split(".")[:3]
-            #print("wtf", list_host_ip, hosts_ips[host])
+            #print("jjj", list_host_ip, hosts_ips[host])
             adjusted_ip = ".".join(list_host_ip) + ".0"
             if adjusted_ip not in subnet_hosts:
                 #print("adjusted ip = ", adjusted_ip)
@@ -255,14 +192,62 @@ def runOSPF(net):
             print("command to send!!! : ", command)
             net[r_s].cmd(command)
 
-def get_hosts_under_switches():
-    pass
+def get_hosts_under_switches(net, all_hosts):
+    hosts_under_switches = {}
+    hosts_ips = {}
+    for h in all_hosts:
+        for s in all_hosts:
+            if s[0] == 's' and s not in hosts_under_switches:
+                hosts_under_switches[s] = []
 
-def get_switches_under_routers():
-    pass
+            if s[0] == 's' and h[0] == 'h':
+                # it is a switch
+                # check if it links to the router
+                # if it does add it to the map
+                host_node = net.getNodeByName(h)
+                switch_node = net.getNodeByName(s)
+                links_between = net.linksBetween(host_node, switch_node)
+                if links_between != []:
+                    hosts_under_switches[s].append(h)
+                    host_interfaces = host_node.intfNames()
+                    print("host_interfaces: ", h, host_interfaces)
 
-def get_hosts_under_routers():
-    pass
+                    for i in host_interfaces:
+                        if host_node.IP(i) and h not in hosts_ips:
+                            hosts_ips[h] = host_node.IP(i)
+                            #print("\t\tip:", host_node.IP(i))
+
+    return hosts_under_switches, hosts_ips
+
+def get_switches_under_routers(net, all_hosts, all_routers):
+    switches_under_router = {}
+    for h in all_hosts:
+        for r in all_routers:
+            if r not in switches_under_router:
+                switches_under_router[r] = []
+
+            if h[0] == 's':
+                # it is a switch
+                # check if it links to the router
+                # if it does add it to the map
+                s = h
+                router_node = net.getNodeByName(r)
+                switch_node = net.getNodeByName(s)
+                links_between = net.linksBetween(router_node, switch_node)
+                if links_between != []:
+                    switches_under_router[r].append(s)
+
+    return switches_under_router
+
+
+def get_hosts_under_routers(switches_under_router, hosts_under_switches):
+    hosts_under_routers = {}
+    for k,v in switches_under_router.items():
+        hosts_under_routers[k] = []
+        for s in v:
+            hosts_under_routers[k] += hosts_under_switches[s]
+
+    return hosts_under_routers
 
 
 def find_interfaces_on_same_subnet(router1, router2):
@@ -284,7 +269,16 @@ def find_interfaces_on_same_subnet(router1, router2):
                 
 
 
+def runBFS(all_routers, map_of_routers_and_links):
+    cached_router_paths = {}
+    for r1 in all_routers:
+        for r2 in all_routers:
+            if r1 != r2:
+                if (r1, r2) not in cached_router_paths and (r1, r2) not in cached_router_paths:
+                    cached_router_paths[(r1, r2)] = BFS_SP(map_of_routers_and_links, r1, r2)
+                    cached_router_paths[(r2, r1)] = list(reversed(cached_router_paths[(r1, r2)]))
 
+    return cached_router_paths
 
 def BFS_SP(graph, start, goal):
     explored = []
