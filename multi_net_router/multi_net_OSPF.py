@@ -120,6 +120,217 @@ def runOSPF(net):
                     
     print("map of routers and links: ", map_of_routers_and_links)
 
+    # assume all links have uniform cost of 1
+    # since all links cost is the same just use bfs to find shortest paths
+
+    # for each router get shortest path to every other router
+    # get the first router in that shortest path
+
+    cached_router_paths = {}
+    #path = BFS_SP(map_of_routers_and_links, "r1","r2")
+    #print("asdfasdf --- ",path)
+
+    for r1 in all_routers:
+        for r2 in all_routers:
+            if r1 != r2:
+                if (r1, r2) not in cached_router_paths and (r1, r2) not in cached_router_paths:
+                    cached_router_paths[(r1, r2)] = BFS_SP(map_of_routers_and_links, r1, r2)
+                    cached_router_paths[(r2, r1)] = list(reversed(cached_router_paths[(r1, r2)]))
+
+    print(cached_router_paths)
+
+    # set routing tables
+    for router in all_routers:
+        router_node = net.getNodeByName(router)
+        interfaces = router_node.intfNames()
+        print("router " + router + ": interface: " + str(interfaces))
+        for interface in interfaces:
+            print("AAAAAAAAAAA",interface)
+            if router_node.MAC(interface):
+                print("\tMAC:", router_node.MAC(interface))
+            if router_node.IP(interface):
+                print("\t IP:", router_node.IP(interface))
+            #print("\t ip of "+interface+" = " + router_node.IP(interface))
+        #print("\t of " + interfaces[0] + ":: ip =" + router_node.IP(interfaces[0]))
+
+    switches_under_router = {}
+    for h in all_hosts:
+        for r in all_routers:
+            if r not in switches_under_router:
+                switches_under_router[r] = []
+
+            if h[0] == 's':
+                # it is a switch
+                # check if it links to the router
+                # if it does add it to the map
+                s = h
+                router_node = net.getNodeByName(r)
+                switch_node = net.getNodeByName(s)
+                links_between = net.linksBetween(router_node, switch_node)
+                if links_between != []:
+                    switches_under_router[r].append(s)
+
+    print("switches under router: ", switches_under_router)
+    
+    hosts_under_switches = {}
+    hosts_ips = {}
+    for h in all_hosts:
+        for s in all_hosts:
+            if s[0] == 's' and s not in hosts_under_switches:
+                hosts_under_switches[s] = []
+
+            if s[0] == 's' and h[0] == 'h':
+                # it is a switch
+                # check if it links to the router
+                # if it does add it to the map
+                host_node = net.getNodeByName(h)
+                switch_node = net.getNodeByName(s)
+                links_between = net.linksBetween(host_node, switch_node)
+                if links_between != []:
+                    hosts_under_switches[s].append(h)
+                    host_interfaces = host_node.intfNames()
+                    print("host_interfaces: ", h, host_interfaces)
+
+                    for i in host_interfaces:
+                        if host_node.IP(i) and h not in hosts_ips:
+                            hosts_ips[h] = host_node.IP(i)
+                            print("\t\tip:", host_node.IP(i))
+
+
+    print("hosts under switches: ", hosts_under_switches)
+    
+    hosts_under_routers = {}
+    for k,v in switches_under_router.items():
+        hosts_under_routers[k] = []
+        for s in v:
+            hosts_under_routers[k] += hosts_under_switches[s]
+
+    print("hosts under routers: ", hosts_under_routers)
+
+    for k,v in cached_router_paths.items():
+        print(k)
+        r_s = k[0]
+        r_d = k[1]
+        r_after_s = v[1]
+
+        router_source = net.getNodeByName(r_s)
+        router_destination = net.getNodeByName(r_d)
+        
+        first_router_after_source = net.getNodeByName(r_after_s)
+        interfaces_on_first_router = first_router_after_source.intfNames()
+        interfaces_on_source_router = router_source.intfNames()
+
+        # find interfaces on the same subnet
+        ips = find_interfaces_on_same_subnet(router_source, first_router_after_source)
+        if ips == None:
+            continue
+
+        interface_on_source, ip_source_router, ip_first_router = ips
+        print("\t\t\t--- ips: ",ip_source_router, ip_first_router)
+
+        hosts_under_destination = hosts_under_routers[r_d]
+
+        # add to ip_source_router routing table to route hosts_under_first_router ips to ip_first_router
+
+        print("\t\t\t-- hosts under destination = ", hosts_under_destination)
+        subnet_hosts = []
+        for host in hosts_under_destination:
+            list_host_ip = hosts_ips[host].split(".")[:3]
+            #print("wtf", list_host_ip, hosts_ips[host])
+            adjusted_ip = ".".join(list_host_ip) + ".0"
+            if adjusted_ip not in subnet_hosts:
+                #print("adjusted ip = ", adjusted_ip)
+                subnet_hosts.append(adjusted_ip)
+        
+        print("subnet hosts = " , subnet_hosts)
+
+        # for every ip in subnet_hosts add /24 to the end then do
+        # ip route add 10.2.0.0/24 via 10.0.6.2 dev r1-eth2
+        # ip route add subnet_hosts[i]/24 via ip_first_router dev interface_on_source
+        print("command: ",r_s, r_d, subnet_hosts, ip_first_router ,interface_on_source )
+        
+        for sub_host in subnet_hosts:
+            add_dash_24_to_ip = sub_host+"/24"
+            command = "ip route add "+ add_dash_24_to_ip +" via " + ip_first_router +" dev " + interface_on_source
+            print("command to send!!! : ", command)
+            net[r_s].cmd(command)
+
+def get_hosts_under_switches():
+    pass
+
+def get_switches_under_routers():
+    pass
+
+def get_hosts_under_routers():
+    pass
+
+
+def find_interfaces_on_same_subnet(router1, router2):
+    interfaces_router1 = router1.intfNames()
+    interfaces_router2 = router2.intfNames()
+
+    for interface_on_r1 in interfaces_router1:
+        for interface_on_r2 in interfaces_router2:
+            r1_ip = router1.IP(interface_on_r1)
+            r2_ip = router2.IP(interface_on_r2)
+            #print(interface_on_r1, interface_on_r2)
+            if interface_on_r1[-1] != '0' and interface_on_r2[-1] != '0' and r1_ip and r2_ip:
+                #print("RRRRRRRRRRR----\t",r1_ip.split("."), r2_ip.split("."))
+                if r1_ip.split(".")[:3] == r2_ip.split(".")[:3]:
+                    #pass
+                    return (interface_on_r1, r1_ip, r2_ip)
+
+    return None
+                
+
+
+
+
+def BFS_SP(graph, start, goal):
+    explored = []
+     
+    # Queue for traversing the
+    # graph in the BFS
+    queue = [[start]]
+     
+    # If the desired node is
+    # reached
+    if start == goal:
+        print("Same Node")
+        return
+     
+    # Loop to traverse the graph
+    # with the help of the queue
+    while queue:
+        path = queue.pop(0)
+        node = path[-1]
+         
+        # Condition to check if the
+        # current node is not visited
+        if node not in explored:
+            neighbours = graph[node]
+             
+            # Loop to iterate over the
+            # neighbours of the node
+            for neighbour in neighbours:
+                new_path = list(path)
+                new_path.append(neighbour)
+                queue.append(new_path)
+                 
+                # Condition to check if the
+                # neighbour node is the goal
+                if neighbour == goal:
+                    print("Shortest path = ", *new_path)
+                    return new_path
+            explored.append(node)
+ 
+    # Condition when the nodes
+    # are not connected
+    print("So sorry, but a connecting"\
+                "path doesn't exist :(")
+    return
+    
+
 def run():
     topo = NetworkTopo()
     net = Mininet(topo=topo)
@@ -128,17 +339,21 @@ def run():
     #info(net['r2'].cmd("ip route add 10.3.0.0/24 via 10.0.4.2 dev r2-eth1"))
     #info(net['r3'].cmd("ip route add 10.2.0.0/24 via 10.0.4.1 dev r3-eth1"))
     
-    info(net['r1'].cmd("./scripts_for_router1.sh"))
-    info(net['r2'].cmd("./scripts_for_router2.sh"))
-    info(net['r3'].cmd("./scripts_for_router3.sh"))
-    info(net['r4'].cmd("./scripts_for_router4.sh"))
+    net['r1'].cmd("./scripts_for_router1.sh")
+    net['r2'].cmd("./scripts_for_router2.sh")
+    net['r3'].cmd("./scripts_for_router3.sh")
+    net['r4'].cmd("./scripts_for_router4.sh")
 
     net.start()
     print("==========NETWORK START==========")
     
+    
     runOSPF(net)
 
     CLI(net)
+
+    #runOSPF(net)
+
     print("==========CLI - NET START==========")
     net.stop()
     print("==========NETWORK END==========")
