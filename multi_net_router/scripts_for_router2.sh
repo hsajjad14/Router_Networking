@@ -17,8 +17,8 @@ ip addr add 10.0.6.2/24 brd + dev r2-eth2
 echo 1 > /proc/sys/net/ipv4/ip_forward
 
 # adding ip route forwarding
-ip route add 10.0.1.0/24 via 10.0.6.1 dev r2-eth2
-ip route add 10.0.2.0/24 via 10.0.6.1 dev r2-eth2
-ip route add 10.3.0.0/24 via 10.0.4.2 dev r2-eth1
-ip route add 10.4.0.0/24 via 10.0.4.2 dev r2-eth1
+#ip route add 10.0.1.0/24 via 10.0.6.1 dev r2-eth2
+#ip route add 10.0.2.0/24 via 10.0.6.1 dev r2-eth2
+#ip route add 10.3.0.0/24 via 10.0.4.2 dev r2-eth1
+#ip route add 10.4.0.0/24 via 10.0.4.2 dev r2-eth1
 
