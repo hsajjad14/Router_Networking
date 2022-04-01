@@ -5,6 +5,8 @@ from mininet.node import Node
 from mininet.log import setLogLevel, info
 from mininet.cli import CLI
 
+import os
+import time
 
 class NetworkTopo(Topo):
     def build(self, **_opts):
@@ -341,8 +343,12 @@ def run():
     net.start()
     print("==========NETWORK START==========")
     
-    
-    runOSPF(net)
+    pid = os.fork()
+
+    if pid == 0:
+        while(True):
+            runOSPF(net)
+            time.sleep(10)
 
     CLI(net)
 
