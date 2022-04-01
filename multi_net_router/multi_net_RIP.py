@@ -5,6 +5,9 @@ from mininet.node import Node
 from mininet.log import setLogLevel, info
 from mininet.cli import CLI
 
+import os
+import time
+
 class NetworkTopo(Topo):
     def build(self, **_opts):
         # Add 2 routers in two different subnets
@@ -112,6 +115,8 @@ def bellmanFord(graph, all_routers, src):
     # recover the shortest paths based on predecessors dictionary
     shortest_paths = {(src, vertex): [] for vertex in predecessors}
     for r in predecessors:
+        if distances[r] > 15:
+            continue
         if r != src:
             curr = predecessors[r]
             if curr == None:
@@ -197,7 +202,7 @@ def runRIP(net):
 
     for k,v in cached_router_paths.items():
         if len(v) < 2:
-            # this would be something like: (r, r): []
+            # i.e. no path found from source to destination
             continue
         r_s = k[0]
         r_d = k[1]
@@ -226,10 +231,8 @@ def runRIP(net):
         subnet_hosts = []
         for host in hosts_under_destination:
             list_host_ip = hosts_ips[host].split(".")[:3]
-            #print("jjj", list_host_ip, hosts_ips[host])
             adjusted_ip = ".".join(list_host_ip) + ".0"
             if adjusted_ip not in subnet_hosts:
-                #print("adjusted ip = ", adjusted_ip)
                 subnet_hosts.append(adjusted_ip)
         
         print("subnet hosts = " , subnet_hosts)
@@ -333,15 +336,16 @@ def run():
 
     net.start()
     print("==========NETWORK START==========")
-    
-    runRIP(net)
+
+    pid = os.fork()
+
+    if pid == 0:
+        while(True):
+            runRIP(net)
+            time.sleep(30)
 
     CLI(net)
     print("==========CLI - NET START==========")
-
-    while(True):
-        runRIP(net)
-        time.sleep(30)
         
     net.stop()
     print("==========NETWORK END==========")
