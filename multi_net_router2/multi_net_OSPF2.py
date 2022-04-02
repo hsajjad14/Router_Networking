@@ -15,7 +15,7 @@ class NetworkTopo(Topo):
         r1_eth0 = '10.0.1.1/24'
         r1_eth1 = '10.0.2.1/24'
         r1_eth2 = '10.0.6.1/24'
-        r1_eth3 = ''
+        r1_eth3 = '10.0.3.1/24'
 
         # add hosts and switches
         h1 = self.addHost('h1', ip='10.0.1.10/24', defaultRoute='via 10.0.1.1', mac="00:00:00:00:00:01")
@@ -36,7 +36,7 @@ class NetworkTopo(Topo):
 
         # router 2
         r2_eth0 = '10.2.0.1/24'
-        r2_eth1 = ''
+        r2_eth1 = '10.0.4.1/24'
         r2_eth2 = '10.0.6.2/24'
         r2_eth3 = ''
 
@@ -52,7 +52,7 @@ class NetworkTopo(Topo):
         self.addLink(r2, s3)
 
         # connecting the two routers r1 and r2
-        self.addLink(r1, r2, intfName1='r1-eth2', intfName2='r2-eth2', params1={'ip': '10.0.6.1/24'}, params2={'ip': '10.0.6.2/24'})
+        self.addLink(r1, r2, intfName1='r1-eth2', intfName2='r2-eth2', params1={'ip': r1_eth2}, params2={'ip': r2_eth2})
 
         # router 3
         r3_eth0 = '10.3.0.1/24'
@@ -67,7 +67,7 @@ class NetworkTopo(Topo):
         self.addLink(r3, s4)
 
         # connecting the two routers r1 and r3
-        self.addLink(r1, r3, intfName1='r1-eth3', intfName2='r3-eth1', params1={'ip': '10.0.3.1/24'}, params2={'ip': '10.0.3.2/24'})
+        self.addLink(r1, r3, intfName1='r1-eth3', intfName2='r3-eth1', params1={'ip': r1_eth3}, params2={'ip': r3_eth1})
 
         # router 4
         r4_eth0 = '10.4.0.1/24'
@@ -82,9 +82,9 @@ class NetworkTopo(Topo):
         self.addLink(r4, s5)
 
         # connecting the two routers r3 and r4
-        self.addLink(r3, r4, intfName1='r3-eth2', intfName2='r4-eth1', params1={'ip': '10.0.5.1/24'}, params2={'ip': '10.0.5.2/24'})
+        self.addLink(r3, r4, intfName1='r3-eth2', intfName2='r4-eth1', params1={'ip': r3_eth2}, params2={'ip': r4_eth1})
         # connecting the two routers r2 and r4
-        self.addLink(r2, r4, intfName1='r2-eth1', intfName2='r4-eth2', params1={'ip': '10.0.4.1/24'}, params2={'ip': '10.0.4.2/24'})
+        self.addLink(r2, r4, intfName1='r2-eth1', intfName2='r4-eth2', params1={'ip': r2_eth1}, params2={'ip': r4_eth2})
 
 def runOSPF(net):
     all_hosts = net.keys()
@@ -342,7 +342,6 @@ def run():
     print("==========NETWORK START==========")
     
     pid = os.fork()
-
     if pid == 0:
         while(True):
             runOSPF(net)
