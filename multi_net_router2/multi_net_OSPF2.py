@@ -87,6 +87,7 @@ class NetworkTopo(Topo):
         self.addLink(r2, r4, intfName1='r2-eth1', intfName2='r4-eth2', params1={'ip': r2_eth1}, params2={'ip': r4_eth2})
 
 def runOSPF(net):
+    print("STARTED OSPF")
     all_hosts = net.keys()
     print("ALL HOSTS: ", all_hosts)
 
@@ -128,7 +129,7 @@ def runOSPF(net):
 
     cached_router_paths = runBFS(all_routers, map_of_routers_and_links)
 
-    print(cached_router_paths)
+    #print(cached_router_paths)
 
     # set routing tables
 
@@ -145,7 +146,6 @@ def runOSPF(net):
     print("hosts under routers: ", hosts_under_routers)
 
     for k,v in cached_router_paths.items():
-        print(k)
         r_s = k[0]
         r_d = k[1]
         r_after_s = v[1]
@@ -163,13 +163,11 @@ def runOSPF(net):
             continue
 
         interface_on_source, ip_source_router, ip_first_router = ips
-        print("\t\t\t--- ips: ",ip_source_router, ip_first_router)
 
         hosts_under_destination = hosts_under_routers[r_d]
 
         # add to ip_source_router routing table to route hosts_under_first_router ips to ip_first_router
 
-        print("\t\t\t-- hosts under destination = ", hosts_under_destination)
         subnet_hosts = []
         for host in hosts_under_destination:
             list_host_ip = hosts_ips[host].split(".")[:3]
@@ -179,18 +177,24 @@ def runOSPF(net):
                 #print("adjusted ip = ", adjusted_ip)
                 subnet_hosts.append(adjusted_ip)
         
-        print("subnet hosts = " , subnet_hosts)
+        #print("subnet hosts = " , subnet_hosts)
 
         # for every ip in subnet_hosts add /24 to the end then do
         # ip route add 10.2.0.0/24 via 10.0.6.2 dev r1-eth2
         # ip route add subnet_hosts[i]/24 via ip_first_router dev interface_on_source
-        print("command: ",r_s, r_d, subnet_hosts, ip_first_router ,interface_on_source )
+        #print("command: ",r_s, r_d, subnet_hosts, ip_first_router ,interface_on_source )
         
         for sub_host in subnet_hosts:
             add_dash_24_to_ip = sub_host+"/24"
             command = "ip route add "+ add_dash_24_to_ip +" via " + ip_first_router +" dev " + interface_on_source
-            print("command to send!!! : ", command)
+           # print("command to send!!! : ", command)
             net[r_s].cmd(command)
+
+    print("=======ROUTING TABLES=======")
+    for r in all_routers:
+        net[r].cmdPrint("route")
+    print("=======ROUTING TABLES=======")
+
 
 def get_hosts_under_switches(net, all_hosts):
     hosts_under_switches = {}
@@ -210,12 +214,10 @@ def get_hosts_under_switches(net, all_hosts):
                 if links_between != []:
                     hosts_under_switches[s].append(h)
                     host_interfaces = host_node.intfNames()
-                    print("host_interfaces: ", h, host_interfaces)
 
                     for i in host_interfaces:
                         if host_node.IP(i) and h not in hosts_ips:
                             hosts_ips[h] = host_node.IP(i)
-                            #print("\t\tip:", host_node.IP(i))
 
     return hosts_under_switches, hosts_ips
 
@@ -258,11 +260,8 @@ def find_interfaces_on_same_subnet(router1, router2):
         for interface_on_r2 in interfaces_router2:
             r1_ip = router1.IP(interface_on_r1)
             r2_ip = router2.IP(interface_on_r2)
-            #print(interface_on_r1, interface_on_r2)
             if interface_on_r1[-1] != '0' and interface_on_r2[-1] != '0' and r1_ip and r2_ip:
-                #print("RRRRRRRRRRR----\t",r1_ip.split("."), r2_ip.split("."))
                 if r1_ip.split(".")[:3] == r2_ip.split(".")[:3]:
-                    #pass
                     return (interface_on_r1, r1_ip, r2_ip)
 
     return None
@@ -290,7 +289,6 @@ def BFS_SP(graph, start, goal):
     # If the desired node is
     # reached
     if start == goal:
-        print("Same Node")
         return
      
     # Loop to traverse the graph
@@ -314,7 +312,6 @@ def BFS_SP(graph, start, goal):
                 # Condition to check if the
                 # neighbour node is the goal
                 if neighbour == goal:
-                    print("Shortest path = ", *new_path)
                     return new_path
             explored.append(node)
  
@@ -333,18 +330,29 @@ def run():
     #info(net['r2'].cmd("ip route add 10.3.0.0/24 via 10.0.4.2 dev r2-eth1"))
     #info(net['r3'].cmd("ip route add 10.2.0.0/24 via 10.0.4.1 dev r3-eth1"))
     
-    net['r1'].cmd("./scripts_for_router1b.sh")
-    net['r2'].cmd("./scripts_for_router2b.sh")
-    net['r3'].cmd("./scripts_for_router3b.sh")
-    net['r4'].cmd("./scripts_for_router4b.sh")
+    net['r1'].cmdPrint("./scripts_for_router1b.sh")
+    net['r2'].cmdPrint("./scripts_for_router2b.sh")
+    net['r3'].cmdPrint("./scripts_for_router3b.sh")
+    net['r4'].cmdPrint("./scripts_for_router4b.sh")
 
     net.start()
     print("==========NETWORK START==========")
     
     pid = os.fork()
     if pid == 0:
+        print("+++++++ROUTING TABLES BEFORE OSPF+++++++")
+        net['r1'].cmdPrint("route")
+        net['r2'].cmdPrint("route")
+        net['r3'].cmdPrint("route")
+        net['r4'].cmdPrint("route")
+        print("+++++++ROUTING TABLES BEFORE OSPF+++++++")
+        time.sleep(5)
         while(True):
+            start = time.time()
             runOSPF(net)
+            end = time.time()
+            full_time = end - start
+            print("OSPF TIME TAKEN = ", full_time)
             time.sleep(1800)
 
     CLI(net)

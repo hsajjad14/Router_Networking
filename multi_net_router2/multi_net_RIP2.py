@@ -340,7 +340,11 @@ def run():
 
     if pid == 0:
         while(True):
+            start = time.time()
             runRIP(net)
+            end = time.time()
+            full_time = end - start
+            print("RIP TIME TAKEN = ", full_time)
             time.sleep(30)
 
     CLI(net)
