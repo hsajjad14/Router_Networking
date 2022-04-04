@@ -33,7 +33,9 @@ In the multi_net_router directory, for topology 1:
 In multi_net_router2 directory, for topology 2:
 
 <img width="449" alt="topo2" src="https://user-images.githubusercontent.com/40809349/161470420-7871e8ec-4856-42ad-b378-d1704119bf56.PNG">
+
 1. For OSPF: run `sudo python multi_net_OSPF2.py`
+
 2. For RIP: run `sudo python multi_net_RIP2.py`
 
 
