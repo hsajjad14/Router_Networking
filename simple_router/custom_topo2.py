@@ -56,19 +56,6 @@ class MyTopo (Topo):
             self.addLink(router, s2)
             self.addLink(router, s3)
 
-            #self.addLink(router, s1, intfName2='r1-eth1', params2={ 'ip' : r1_eth0 } )
-            #self.addLink(router, s2, intfName2='r1-eth2', params2={ 'ip' : r1_eth1 } )
 
-            #router.sendCmd("ifconfig r1-eth0 0")
-            #router.cmd("ifconfig r1-eth1 0")
-            #router.cmd("ifconfig r1-eth0 hw ether 00:00:00:00:01:01")
-            #router.cmd("ifconfig r1-eth1 hw ether 00:00:00:00:01:02")
-            #router.cmd("ip addr add 10.0.1.1/24 brd + dev r1-eth0")
-            #router.cmd("ip addr add 10.0.2.1/24 brd + dev r1-eth1")
-            #router.cmd("echo 1 > /proc/sys/net/ipv4/ip_forward")
-            #h1.cmd("ip route add default via 10.0.1.1")
-            #h2.cmd("ip route add default via 10.0.2.1")
-            #h3.cmd("ip route add default via 10.0.1.1")
-            #h4.cmd("ip route add default via 10.0.2.1")
 
 topos = { 'mytopo': ( lambda: MyTopo() ) }
