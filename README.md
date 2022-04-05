@@ -1,14 +1,14 @@
 # CSC358 a2 Router_Networking
 
 ## Simple End System
-First, run the default mininet topology: `sudo mn`
-To test the simple end-system which is running on host2:
-1. First run `nc -lu <port>` on host1 (broadcast implemented using UDP)
-2. On host2 run `python simple_end_sys/server_client/server.py <port> True False <host1's ip> <ttl> <file_path_to_send>` This:
-    * Sets the flag for broadcasting host2 to the router
+`cd` into `simple_end_sys/server_client`
+First, run the mininet topology: `sudo mn --custom custom_topo2.py --topo mytopo` and call xterm on any devices as desired in the mininet terminal. To test the simple end-system which is running on h3:
+1. First run `nc -lu <port>` on h1 (broadcast implemented using UDP). Also `nc -lu <port>` on r1.
+2. On h3 run `python /server.py <port> True False <host1's ip> <ttl> <file_path_to_send>` This:
+    * Sets the flag for broadcasting h3 to the router
     * Sets the flag to send a message to false (nobody is listening yet)
-    * ... Then listens to any message it recieves on \<port\> and prints it. Here we can verify that on host1 the file we sent from host2 appears, now host2 listens to messages and prints anything it recieves
-4. On host1 run `python simple_end_sys/server_client/client.py <port> <host2's ip> <ttl> <file_path_to_send>`. This sends a file (given the TTL is sufficiently large) to host2 end-system which prints it.
+    * ... Then listens to any message it recieves on \<port\> and prints it.
+4. On h1 run `python simple_end_sys/server_client/client.py <port> <host2's ip> <ttl> <file_path_to_send>`. This sends a file (given the TTL is sufficiently large) to h3 end-system which prints it.
 
 
 ## Simple Router
