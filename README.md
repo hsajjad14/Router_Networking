@@ -8,7 +8,7 @@ First, run the mininet topology: `sudo mn --custom custom_topo2.py --topo mytopo
     * Sets the flag for broadcasting h3 to the router
     * Sets the flag to send a message to false (nobody is listening yet)
     * ... Then listens to any message it recieves on \<port\> and prints it.
-4. On h1 run `python simple_end_sys/server_client/client.py <port> <host2's ip> <ttl> <file_path_to_send>`. This sends a file (given the TTL is sufficiently large) to h3 end-system which prints it.
+4. On h1 run `python simple_end_sys/server_client/client.py <port> <h3's ip> <ttl> <file_path_to_send>`. This sends a file (given the TTL is sufficiently large) to h3 end-system which prints it.
 
 
 ## Simple Router
