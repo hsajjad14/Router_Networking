@@ -2,7 +2,7 @@
 
 ## Simple End System
 `cd` into `simple_end_sys/server_client`
-First, run the mininet topology: `sudo mn --custom custom_topo2.py --topo mytopo` and call xterm on any devices as desired in the mininet terminal. To test the simple end-system which is running on h3:
+First, run the mininet topology: `sudo mn --custom custom_topo.py --topo mytopo` and call xterm on any devices as desired in the mininet terminal. To test the simple end-system which is running on h3:
 1. First run `nc -lu <port>` on h1 (broadcast implemented using UDP). Also `nc -lu <port>` on r1.
 2. On h3 run `python /server.py <port> True False <host1's ip> <ttl> <file_path_to_send>` This:
     * Sets the flag for broadcasting h3 to the router
