@@ -2,7 +2,7 @@
 Inspired by topo-2sw-2host.py from: http://mininet.org/walkthrough/
 Custom mininet topology based on Piazza @249
 
-also: http://csie.nqu.edu.tw/smallko/sdn/mininet_simple_router.html
+also: http://csie.nqu.edu.tw/smallko/sdn/mininet_simple_router.htm
 
 Two switches, each with its own two hosts and one host that is connected to both switches (the "router")
 
