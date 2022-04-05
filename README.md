@@ -16,7 +16,7 @@ First, run the mininet topology: `sudo mn --custom custom_topo.py --topo mytopo`
 2. Run sudo mn -x --custom custom_topo2.py --topo mytopo
 3. In the terminal window for r1 run `./scripts_for_router`
    * Note: if you encounter the error `/bin/bash^M: bad interpreter: No such file or directory` when running this script, run:
-      * 'sed -i -e 's/\r$//' scripts_for_router`
+      * `sed -i -e 's/\r$//' scripts_for_router`
       * ./scripts_for_router
 5. To test:
 6. on h1 and h4 run ifconfig (h1's ip = 10.0.1.10, h4's ip = 10.0.2.20)
